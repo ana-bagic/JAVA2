@@ -1,0 +1,154 @@
+*********** 1. **********
+
+*** unutar BlogEntry: ***
+private List<BlogUser> hearts = new LinkedList<>();
+
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "heartsForEntry", 
+			  joinColumns = @JoinColumn(name = "entry_id"), 
+			  inverseJoinColumns = @JoinColumn(name = "user_id"))
+	public List<BlogUser> getHearts() {
+		return hearts;
+	}
+
+	public void setHearts(List<BlogUser> hearts) {
+		this.hearts = hearts;
+	}
+
+*** unutar BlogUser: ***
+private List<BlogEntry> hearted = new LinkedList<>();
+
+	@ManyToMany(mappedBy = "hearts")
+	public List<BlogEntry> getHearted() {
+		return hearted;
+	}
+
+	public void setHearted(List<BlogEntry> hearted) {
+		this.hearted = hearted;
+	}
+
+*** unutar entryPage.jsp ***
+	<p>Srca: ${HEARTS}</p>
+	<c:if test="<%=session.getAttribute(\"current.user.id\") != null%>">
+		<form method="post"
+			action="<c:url value="/servleti/author/${NICK}/${ENTRY.id}/heart"></c:url>">
+			<button type="submit">Srce</button>
+		</form>
+	</c:if>
+
+*** unutar AuthorServlet: ***
+unutar doPost:
+		if(parameters.length == 3 && parameters[2].equals("heart")) {
+			heart(req, resp, parameters[0], parameters[1]);
+			return;
+		}
+
+heart metoda:
+	private void heart(HttpServletRequest req, HttpServletResponse resp, String nick, String entryId) throws IOException, ServletException {		
+		BlogEntry entry;
+		try {
+			entry = DAOProvider.getDAO().getBlogEntry(Long.parseLong(entryId));
+			if(entry == null) {
+				ErrorUtil.sendErrorMessage(req, resp, "Entry with the id " + entryId + " does not exist.");
+				return;
+			}
+		} catch (NumberFormatException e) {
+			ErrorUtil.sendErrorMessage(req, resp, "Entry id " + entryId + " is not parsable to a number.");
+			return;
+		}
+		
+		BlogUser user = DAOProvider.getDAO().getUser((String) req.getSession().getAttribute("current.user.nick"));
+		if(!entry.getHearts().contains(user)) {
+			entry.getHearts().add(user);
+		}
+		
+		DAOProvider.getDAO().update(entry);
+		
+		resp.sendRedirect(resp.encodeRedirectURL(req.getContextPath() + "/servleti/author/" + nick + "/" + entry.getId()));
+	}
+
+
+********** 2. **********
+*** u pom.xml ***
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.7</version>
+		</dependency>
+
+*** novi razred StatsDTO ***
+public class StatsDTO {
+
+	private String nick;
+	private int entryCount;
+	
+	public StatsDTO(String nick, int entryCount) {
+		this.nick = nick;
+		this.entryCount = entryCount;
+	}
+
+	public String getNick() {
+		return nick;
+	}
+
+	public int getEntryCount() {
+		return entryCount;
+	}
+
+}
+
+*** novi razred StatsServlet ***
+@WebServlet(urlPatterns = "/servleti/stats")
+public class StatsServlet extends HttpServlet {
+
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		List<BlogUser> users = DAOProvider.getDAO().getAllUsers();
+		List<StatsDTO> stats = new LinkedList<>();
+		for(BlogUser u : users) {
+			stats.add(new StatsDTO(u.getNick(), u.getEntries().size()));
+		}
+		
+		Gson gson = new Gson();
+		String jsonText = gson.toJson(stats.toArray());
+		
+		resp.getWriter().write(jsonText);
+		resp.getWriter().flush();
+	}
+}
+
+*** u index.jsp ***
+	<div>
+		<button onclick="stats()">Statistika</button>
+		<div id="stats"></div>
+	</div>
+
+<script type="text/javascript">
+function stats() {
+	var xmlhttp;
+	if (window.XMLHttpRequest) {
+		xmlhttp = new XMLHttpRequest();
+	} else {
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+			var text = xmlhttp.responseText;
+			var jsonResult = JSON.parse(text);
+			var html = "<table><tr><th>Username</th><th>Broj postova</th></tr>";
+			for (var i = 0; i < jsonResult.length; i++) {
+				html += "<tr><td>" + jsonResult[i].nick + "</td><td>" + jsonResult[i].entryCount + "</td></tr>"
+			}
+			html += "</table>";
+			document.getElementById("stats").innerHTML = html;
+		}
+	}
+	xmlhttp.open("GET", "servleti/stats" true);
+	xmlhttp.send();
+}
+
+</script>
+
