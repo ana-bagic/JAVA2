@@ -1,0 +1,10 @@
+1	Queen	https://www.youtube.com/watch?v=2ZBtPf7FOoM
+2	Saint Motel	https://www.youtube.com/watch?v=IyVPyKrx0Xo
+3	alt-J	https://www.youtube.com/watch?v=Qg6BwvDcANg
+4	KEiiNO	https://www.youtube.com/watch?v=jQaiarjof2k
+5	Bastille	https://www.youtube.com/watch?v=ZCTDKLjdok4
+6	Imagine Dragons	https://www.youtube.com/watch?v=mWRsgZuwf_8
+7	The Killers	https://www.youtube.com/watch?v=RIZdjT1472Y
+8	The Lumineers	https://www.youtube.com/watch?v=pTOC_q0NLTk
+9	The Neighbourhood	https://www.youtube.com/watch?v=GCdwKhTtNNw
+10	Coldplay	https://www.youtube.com/watch?v=1G4isv_Fylg
