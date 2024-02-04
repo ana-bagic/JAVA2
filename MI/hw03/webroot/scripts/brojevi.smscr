@@ -1,4 +1,0 @@
-{$= "text/plain" @setMimeType $}
-{$FOR i 1 6 1$}
-    Number is {$= i $}. {$ifeven i$}That's even!{$end$}
-{$END$}
